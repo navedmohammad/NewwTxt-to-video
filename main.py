@@ -15,6 +15,23 @@ bot = Client("bot",
              api_id=20483216,
              api_hash="2518170d3dd939b3f2893cb0aae805c4")
 
+# Dictionary to track user states
+user_states = {}
+
+async def listen(chat_id, bot):
+    """
+    Custom function to wait for the next message from the user in the specified chat.
+    """
+    future = asyncio.get_event_loop().create_future()
+
+    @bot.on_message(filters.chat(chat_id) & filters.incoming)
+    async def _listener(client, message):
+        if not future.done():
+            future.set_result(message)
+            bot.remove_handler(_listener)  # Remove handler after getting the message
+
+    return await future
+
 @bot.on_message(filters.command(["start"]))
 async def start(bot: Client, m: Message):
     await m.reply_text(f"Hello [{m.from_user.first_name}](tg://user?id={m.from_user.id})\nPress /vastavik")
@@ -27,7 +44,7 @@ async def stop(bot: Client, m: Message):
 @bot.on_message(filters.command(["vastavik"]))
 async def vastavik(bot: Client, m: Message):
     editable = await m.reply_text('Send TXT file for download')
-    input_msg: Message = await bot.listen(editable.chat.id)
+    input_msg: Message = await listen(editable.chat.id, bot)
     file_path = await input_msg.download()
     await input_msg.delete()
 
@@ -42,17 +59,17 @@ async def vastavik(bot: Client, m: Message):
         return
 
     await editable.edit(f"Total links found are **{len(links)}**\n\nSend the starting point (initial is **1**)")
-    start_msg: Message = await bot.listen(editable.chat.id)
+    start_msg: Message = await listen(editable.chat.id, bot)
     start_index = int(start_msg.text)
     await start_msg.delete()
 
     await editable.edit("**Enter Batch Name**")
-    batch_msg: Message = await bot.listen(editable.chat.id)
+    batch_msg: Message = await listen(editable.chat.id, bot)
     batch_name = batch_msg.text
     await batch_msg.delete()
 
     await editable.edit("**Enter resolution (e.g., 720)**")
-    res_msg: Message = await bot.listen(editable.chat.id)
+    res_msg: Message = await listen(editable.chat.id, bot)
     resolution = res_msg.text
     await res_msg.delete()
 
@@ -67,13 +84,13 @@ async def vastavik(bot: Client, m: Message):
     res = resolution_dict.get(resolution, "UN")
 
     await editable.edit("**Enter A Highlighter Otherwise send 👉Co👈 **")
-    highlighter_msg: Message = await bot.listen(editable.chat.id)
+    highlighter_msg: Message = await listen(editable.chat.id, bot)
     highlighter = highlighter_msg.text
     await highlighter_msg.delete()
     MR = highlighter if highlighter != 'Co' else "️ ⁪⁬⁮⁮⁮"
 
     await editable.edit("Now send the **Thumb URL**\nEg: `https://telegra.ph/file/0633f8b6a6f110d34f044.jpg`\n\nor Send `no`")
-    thumb_msg: Message = await bot.listen(editable.chat.id)
+    thumb_msg: Message = await listen(editable.chat.id, bot)
     thumb_url = thumb_msg.text
     await thumb_msg.delete()
     await editable.delete()
