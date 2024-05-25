@@ -24,8 +24,7 @@ import os
 bot = Client("bot",
              bot_token= "6775811275:6936886870:AAEo7RsIsl75sklyP2x2neJsnQZuMXZaPOQ",
              api_id= 20483216,
-             api_hash= "6508967542:AAEX9gs7-bdQSE_XfeRdfWC13OQGauk8aLs)
-
+             api_hash= "2518170d3dd939b3f2893cb0aae805c4
 
 @bot.on_message(filters.command(["start"]))
 async def account_login(bot: Client, m: Message):
