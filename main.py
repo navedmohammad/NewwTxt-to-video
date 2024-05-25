@@ -24,11 +24,12 @@ async def listen(chat_id, bot):
     """
     future = asyncio.get_event_loop().create_future()
 
-    @bot.on_message(filters.chat(chat_id) & filters.incoming)
     async def _listener(client, message):
         if not future.done():
             future.set_result(message)
             bot.remove_handler(_listener)  # Remove handler after getting the message
+
+    bot.add_handler(_listener)
 
     return await future
 
@@ -136,35 +137,4 @@ async def vastavik(bot: Client, m: Message):
                 try:
                     downloaded_file = await helper.download(url, name)
                     await bot.send_document(chat_id=m.chat.id, document=downloaded_file, caption=cc1)
-                    count += 1
-                    os.remove(downloaded_file)
-                    time.sleep(1)
-                except FloodWait as e:
-                    await m.reply_text(str(e))
-                    time.sleep(e.x)
-                    continue
-            elif ".pdf" in url:
-                try:
-                    cmd = f'yt-dlp -o "{name}.pdf" "{url}"'
-                    download_cmd = f"{cmd} -R 25 --fragment-retries 25"
-                    os.system(download_cmd)
-                    await bot.send_document(chat_id=m.chat.id, document=f'{name}.pdf', caption=cc1)
-                    count += 1
-                    os.remove(f'{name}.pdf')
-                except FloodWait as e:
-                    await m.reply_text(str(e))
-                    time.sleep(e.x)
-                    continue
-            else:
-                prog = await m.reply_text(f"**Downloading:-**\n\n**Name :-** `{name}\nQuality - {resolution}`\n\n**Url :-** `{url}`")
-                res_file = await helper.download_video(url, cmd, name)
-                await prog.delete()
-                await helper.send_vid(bot, m, cc, res_file, thumb_path, name, prog)
-                count += 1
-                time.sleep(1)
-
-    except Exception as e:
-        await m.reply_text(f"Error: {str(e)}")
-    await m.reply_text("Done")
-
-bot.run()
+                    count
